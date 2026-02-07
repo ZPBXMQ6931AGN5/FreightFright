@@ -2,6 +2,7 @@ import time
 import random
 import sys
 import os
+import ctypes
 
 # --- 基础配置与工具 ---
 
@@ -19,6 +20,35 @@ class Colors:
     CYAN = "\033[36m"         # 提示
     BOLD = "\033[1m"
     ITALIC = "\033[3m"
+
+def _enable_windows_ansi():
+    if os.name != "nt":
+        return True
+    try:
+        handle = ctypes.windll.kernel32.GetStdHandle(-11)
+        mode = ctypes.c_uint()
+        if not ctypes.windll.kernel32.GetConsoleMode(handle, ctypes.byref(mode)):
+            return False
+        mode.value |= 0x0004  # ENABLE_VIRTUAL_TERMINAL_PROCESSING
+        if not ctypes.windll.kernel32.SetConsoleMode(handle, mode):
+            return False
+        return True
+    except Exception:
+        return False
+
+def _configure_console():
+    if not sys.stdout.isatty() or not _enable_windows_ansi():
+        Colors.RESET = ""
+        Colors.RED = ""
+        Colors.GREEN = ""
+        Colors.YELLOW = ""
+        Colors.BLUE = ""
+        Colors.MAGENTA = ""
+        Colors.CYAN = ""
+        Colors.BOLD = ""
+        Colors.ITALIC = ""
+
+_configure_console()
 
 # --- 新增：互动检查单系统 ---
 
